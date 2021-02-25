@@ -1,11 +1,11 @@
+#include <deque>
 #include <fstream>
 #include <iostream>
+#include <stack>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-#include <deque>
-#include <stack>
 
 using namespace std;
 
@@ -44,18 +44,21 @@ class Graph {
 
   int Size() const { return graph.size(); }
 
-  const vector<tuple<int, int, string>>& GetNeighbours(int node) const {
+  const vector<tuple<int, int, string>>& operator[](int node) const {
     return graph[node];
   }
 };
+
+struct Node {};
 
 struct Car {
   std::vector<std::pair<int, int>> paths_;
 };
 
-enum class Color {WHITE, GRAY, BLACK};
+enum class Color { WHITE, GRAY, BLACK };
 
-void DFSUtil(const Graph& graph, int vertex, std::vector<Color>& color) {
+void DFSUtil(const Graph& graph, int vertex, std::vector<Color>& color,
+             int& general_time) {
   std::vector<int> parent(graph.Size(), vertex);
   std::stack<int> vStack;
   vStack.push(vertex);
@@ -65,17 +68,16 @@ void DFSUtil(const Graph& graph, int vertex, std::vector<Color>& color) {
 
     if (color[curr] == Color::WHITE) {
       color[curr] = Color::GRAY;
-
       for (const auto& to : graph[curr]) {
-        if (color[to] == Color::WHITE) {
-          parent[to] = curr;
-          vStack.push(to);
+        if (color[std::get<0>(to)] == Color::WHITE) {
+          parent[std::get<0>(to)] = curr;
+          vStack.push(std::get<0>(to));
         }
       }
     } else if (color[curr] == Color::GRAY) {
       vStack.pop();
       color[curr] = Color::BLACK;
-      Visit(graph, curr, parent);
+      general_time += std::get<1>(graph[parent[curr]][curr]);
     } else {
       vStack.pop();
     }
@@ -114,17 +116,18 @@ int main() {
   }
 
   std::vector<Car> cars(num_of_cars);
-
+  Car car;
   int path_size = 0;
   for (int i = 0; i < num_of_cars; ++i) {
     input_file >> path_size;
     for (int j = 0; j < path_size; ++j) {
       input_file >> street_name;
-      cars[i].paths_.emplace_back(std::get<0>(city[street_name]),
-                                  std::get<1>(city[street_name]));
+      car.paths_.emplace_back(std::get<0>(city[street_name]),
+                              std::get<1>(city[street_name]));
+      int cur_time = 0;
+
     }
   }
 
-  std::cout << sim_duration << intersection_num << num_of_streets << num_of_cars << points << std::endl;
   return 0;
 }
