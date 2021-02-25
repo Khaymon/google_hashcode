@@ -9,7 +9,7 @@ class Light {
 
 void print(){
     // traffic_lights - ветктор Light-ов
-    cout << traffic_lights.size(); << endl;
+    cout << traffic_lights.size() << endl;
     for (int i = 0; i < traffic_lights; ++i){
         cout << traffic_lights[i].street_index_ << endl;
         for (const auto& elem : street_timing_){
