@@ -53,9 +53,6 @@ public:
     }
 };
 
-struct Car {
-    std::vector<std::pair<int, int>> paths_;
-};
 
 enum class Color {
     WHITE, GRAY, BLACK
@@ -88,6 +85,23 @@ void DFSUtil(const Graph &graph, int vertex, std::vector<Color> &color) {
     }
 }
 
+struct Car {
+    std::vector<std::pair<int, int>> paths_;
+    int full_time_;
+};
+
+int ComputeCarTime(const Car& car, const Graph& graph) {
+    int result = 0;
+    for (const auto& path : car.paths_) {
+        for (int i = 0; i < graph[path.first].size(); ++i) {
+            if (std::get<0>(graph[path.first][i]) == path.second) {
+                result += std::get<1>(graph[path.first][i]);
+                break;
+            }
+        }
+    }
+    return result;
+}
 int main() {
     std::cout << "Enter data set name: \n";
     for (int i = 0; i < 6; ++i) {
@@ -106,7 +120,7 @@ int main() {
                    num_of_cars >> points;
         std::vector<int> number(intersection_num, 0);
         std::vector<std::vector<string>> names(intersection_num);
-
+        vector<vector<pair<bool, int>>> times(num_of_streets, vector<pair<bool, int>>(num_of_streets, make_pair(false, 0)));
         std::string filename_output = "output-";
         filename_output += filename;
         ofstream output;
@@ -133,14 +147,25 @@ int main() {
         }
 
         std::vector<Car> cars(num_of_cars);
-
+        Car car;
         int path_size = 0;
+
         for (int i = 0; i < num_of_cars; ++i) {
             input_file >> path_size;
+            int all_time = 0;
             for (int j = 0; j < path_size; ++j) {
                 input_file >> street_name;
-                cars[i].paths_.emplace_back(std::get<0>(city[street_name]),
-                                            std::get<1>(city[street_name]));
+                car.paths_.emplace_back(std::get<0>(city[street_name]),
+                                        std::get<1>(city[street_name]));
+                if (!times[std::get<1>(city[street_name])][std::get<0>(city[street_name])].first) {
+                    all_time += std::get<2>(city[street_name]);
+                times[std::get<1>(city[street_name])][std::get<0>(city[street_name])].first = true;
+                times[std::get<1>(city[street_name])][std::get<0>(city[street_name])].second += std::get<2>(city[street_name]);
+                }
+                car.full_time_ = ComputeCarTime(car, graph);
+                if (car.full_time_ <= sim_duration) {
+                    cars[i] = car;
+                }
             }
         }
 
@@ -148,7 +173,7 @@ int main() {
             output << '\n' << j ;
             output << '\n'<< number[j] ;
             for (int k = 0 ; k < number[j]; k++) {
-                output << '\n'<< names[j][k] << " 1";
+                output << '\n'<< names[j][k] << " " << max(times[j][k].second, 1);
             }
         }
         input_file.close();
